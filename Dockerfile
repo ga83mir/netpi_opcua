@@ -25,10 +25,10 @@ RUN apt-get update  \
     && echo 'root:root' | chpasswd \
     && echo 'pi:raspberry' | chpasswd \
     && adduser pi sudo \
-
+    && mkdir /var/run/sshd \
     && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
     && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd \
-    && mkdir /var/run/sshd \
+
     && touch /usr/bin/modprobe \
     && chmod +x /usr/bin/modprobe \
     && touch /etc/modules \
@@ -37,7 +37,7 @@ RUN apt-get update  \
     && dpkg -i /tmp/netx-docker-pi-pns-eth-3.12.0.8.deb \
 #compile netX network daemon
     && gcc /tmp/cifx0daemon.c -o /opt/cifx/cifx0daemon -I/usr/include/cifx -Iincludes/ -lcifx -pthread \
-#install docker
+#install docker	
     && curl -sSL https://get.docker.com | sh \
 #clean up
     && rm -rf /tmp/* \
@@ -46,6 +46,23 @@ RUN apt-get update  \
     && apt-get -y clean \
     && rm -rf /var/lib/apt/lists/*
 
+#create needed folders for python program
+#RUN mkdir /home/pi/rasp /home/pi/opc_http /home/pi/ua_python3 \
+
+#set the workding directory for programming examples
+WORKDIR /home/pi
+RUN ls
+RUN mkdir rasp opc_http ua_python3
+
+
+#copy Rasp Files
+COPY ./rasp/* rasp/
+
+#copy opc http files
+COPY ./opc_http/* opc_http/
+
+#copy ua python3 files
+COPY ./ua_python3/* ua_python3/
 
 #set the entrypoint
 ENTRYPOINT ["/etc/init.d/entrypoint.sh"]
