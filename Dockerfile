@@ -5,12 +5,9 @@ FROM resin/armv7hf-debian:stretch
 RUN [ "cross-build-start" ]
 
 #labeling
-LABEL maintainer="netpi@hilscher.com" \
+LABEL maintainer="ga83mir@mytum.de" \
       version="V0.9.1.0" \
-      description="netX based TCP/IP network interface and codesys"
-
-#version
-ENV HILSCHERNETPI_NETX_TCPIP_NETWORK_INTERFACE_VERSION 0.9.1.0
+      description="netpu"
 
 #copy files
 COPY "./init.d/*" /etc/init.d/ 
@@ -20,10 +17,17 @@ COPY "./driver/*" "./firmware/*" /tmp/
 RUN apt-get update  \
     && apt-get install -y openssh-server build-essential \
     && apt-get install -y openssh-server net-tools \
+    && apt-get install -y --no-install-recommends apt-utils \
+    && apt-get install python \
+    && apt-get install python-pip \
+    && apt-get install nano \
+    && apt-get install python-dev \
+    && apt-get install libxml2-dev libxmlsec1-dev libffi-dev gcc \
+
 #do users root and pi    
     && useradd --create-home --shell /bin/bash pi \
     && echo 'root:root' | chpasswd \
-    && echo 'pi:raspberry' | chpasswd \
+    && echo 'pi:PWD4ais!' | chpasswd \
     && adduser pi sudo \
     && mkdir /var/run/sshd \
     && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
@@ -37,6 +41,7 @@ RUN apt-get update  \
     && dpkg -i /tmp/netx-docker-pi-pns-eth-3.12.0.8.deb \
 #compile netX network daemon
     && gcc /tmp/cifx0daemon.c -o /opt/cifx/cifx0daemon -I/usr/include/cifx -Iincludes/ -lcifx -pthread \
+
 #install docker	
     && curl -sSL https://get.docker.com | sh \
 #clean up
@@ -47,22 +52,38 @@ RUN apt-get update  \
     && rm -rf /var/lib/apt/lists/*
 
 #create needed folders for python program
-#RUN mkdir /home/pi/rasp /home/pi/opc_http /home/pi/ua_python3 \
+RUN mkdir /home/pi/opc_http
+RUN mkdir /home/pi/opc_http/log_file /home/pi/opc_http/module /home/pi/opc_http/test \
+	  /home/pi/ua_python3 /home/pi/ua_python3/log_file /home/pi/ua_python3/module \
+	  /home/pi/ua_python3/test
+
+#do install pip
+RUN sudo pip install --upgrade setuptools
+RUN sudo apt-get update && sudo apt-get upgrade
+RUN pip install wheel
+RUN pip install requests
+RUN pip install opcua
 
 #set the workding directory for programming examples
 WORKDIR /home/pi
-RUN ls
-RUN mkdir rasp opc_http ua_python3
 
-
-#copy Rasp Files
-COPY ./rasp/* rasp/
+#copy codesys files
+COPY ./resources/* ./
 
 #copy opc http files
-COPY ./opc_http/* opc_http/
+COPY ./opc_http/log_file/* opc_http/log_file/
+COPY ./opc_http/module/* opc_http/module/
+COPY ./opc_http/test/* opc_http/test/
+COPY ./opc_http/opc_ua_client_http.py opc_http/opc_ua_client_http.py
 
 #copy ua python3 files
-COPY ./ua_python3/* ua_python3/
+COPY ./ua_python3/log_file/* ua_python3/log_file/
+COPY ./ua_python3/module/* ua_python3/module/
+COPY ./ua_python3/test/* ua_python3/test/
+COPY ./ua_python3/opcua3.py ua_python3/opcua3.py
+
+#install codesyscontrol
+#RUN sudo apt install ./codesyscontrol_arm_raspberry_V3.5.12.30.deb
 
 #set the entrypoint
 ENTRYPOINT ["/etc/init.d/entrypoint.sh"]
