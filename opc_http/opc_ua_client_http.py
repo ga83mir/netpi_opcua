@@ -70,6 +70,7 @@ def initialization():
 def main():
 	#set parameters to connect with http server(default server is online)
 	http_url = "http://129.187.88.30:4567/observedVariables"
+	#http_url = "http://xppu-interface.ais.mw.tum.de:4567/observedVariables"
 	http_client = hClient(http_url)
 	make_connection = True
 
@@ -88,7 +89,17 @@ def main():
 	#start with a endless loop
 	while True:
 		#try to get connect with http server
-		make_connection = True
+		#make_connection = True
+		mode = 0
+		if init_status:
+			while mode != 1 and mode != 2:
+				mode = input("Select the on/offline mode[Press 1 or 2]: ")
+			if mode == 1:
+				make_connection = True
+			else:
+				make_connection = False
+				http_status = False
+				http_inter = False
 		sys.stdout.flush()
 		while make_connection:
 			if init_status:
@@ -115,7 +126,6 @@ def main():
 				http_inter = False
 				while not log:
 					http_status = http_client.reconn(http_status)
-					#print(last)
 					http_pro_type, log = http_client.get_recently_value(http_status, last)
 					if log==None:
 						http_status = False
@@ -137,6 +147,7 @@ def main():
 				http_client.write_logfile()
 
 		else:
+			http_inter = False
 			if init_status:
 				sys.stdout.flush()
 				print("start under"+ CRED + " offline" + CEND + " mode")
@@ -167,9 +178,12 @@ def main():
 				print("Producting(" + CGREEN+"online"+CEND+") with type: " + str(http_pro_type), end=" ")
 			else:
 				print("Producting(" + CRED +"offline"+CEND+") with type: " + str(http_pro_type), end=" ")
+				#print("Producting(" + CRED + "offline" + CEND + ")with type: ", end = " ")
 			sys.stdout.flush()
 
 			opc_client.set_value('b_http', http_status, ua.VariantType.Boolean)
+			#if http_status:
+				#opc_client.set_value('i_opc_type', pro_type, ua.VariantType.Int16)
 			opc_client.set_value('i_opc_type', pro_type, ua.VariantType.Int16)
 			opc_client.set_value('b_opc_answer', True, ua.VariantType.Boolean)
 
@@ -184,7 +198,7 @@ def main():
 				sys.stdout.flush()
 				print(CGREEN + '     ...done' + CEND)
 				sys.stdout.write('\x1b[2K')
-			except KeyboardInterrupt:
+			except KeyboardInterrupt:		
 				retry = None
 				opcua_inter = True
 				opc_status = False
@@ -195,7 +209,7 @@ def main():
 				opc_client.disconnect()
 				report_error(http_status, http_inter, opc_status, opcua_inter)
 				return retry
-			#sys.stdout.write('\x1b[2K')
+
 			opc_counter = opc_client.get_value('i_opc_counter')
 			opc_client.disconnect()
 			init_status = False
@@ -203,7 +217,6 @@ def main():
 			#write plc log file
 			report_error(http_status, http_inter, opc_status, opcua_inter)
 			add_logfile(http_status, pro_type)
-
 		else:
 			retry = None
 			init_status = False

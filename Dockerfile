@@ -67,9 +67,6 @@ RUN pip install opcua
 #set the workding directory for programming examples
 WORKDIR /home/pi
 
-#copy codesys files
-COPY ./resources/* ./
-
 #copy opc http files
 COPY ./opc_http/log_file/* opc_http/log_file/
 COPY ./opc_http/module/* opc_http/module/
@@ -82,9 +79,6 @@ COPY ./ua_python3/module/* ua_python3/module/
 COPY ./ua_python3/test/* ua_python3/test/
 COPY ./ua_python3/opcua3.py ua_python3/opcua3.py
 
-#install codesyscontrol
-#RUN sudo apt install ./codesyscontrol_arm_raspberry_V3.5.12.30.deb
-
 #set the entrypoint
 ENTRYPOINT ["/etc/init.d/entrypoint.sh"]
 
@@ -96,12 +90,4 @@ STOPSIGNAL SIGTERM
 
 #stop processing ARM emulation (comment out next line if not built as automated build on docker hub @haha)
 RUN [ "cross-build-end" ]
-
-
-
-
-
-
-
-
 
